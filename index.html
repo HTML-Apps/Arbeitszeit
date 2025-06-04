@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Arbeitszeitrechner</title>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --font-color: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* Changed height to min-height for better content flow */
+      margin: 0;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%; /* Take full width within padding */
+      max-width: 400px; /* Default max-width for landscape/larger screens */
+      margin: auto; /* Center the container */
+    }
+
+    h2 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .buttons button {
+      flex: 1;
+      margin: 0 0.25rem;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      background-color: white;
+      color: var(--primary-color);
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .buttons button.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      color: var(--font-color);
+    }
+
+    input[type="time"] {
+      width: 100%; /* Changed to 100% to fill available space */
+      padding: 0.75rem; /* Slightly more padding for better touch target */
+      font-size: 1.1rem; /* Larger font size for better readability */
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button#berechnen {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.85rem; /* Slightly more padding */
+      font-size: 1.1rem; /* Larger font size */
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button#berechnen:hover {
+      background-color: #45a049;
+    }
+
+    .result {
+      margin-top: 1.5rem;
+      color: var(--font-color);
+    }
+
+    /* --- Portrait Mode Specific Styles --- */
+    @media (orientation: portrait) {
+      body {
+        align-items: flex-start; /* Align content to the top */
+        padding-top: 2rem; /* Add some space from the top */
+        padding-bottom: 2rem; /* Add some space at the bottom */
+      }
+
+      .container {
+        max-width: 90%; /* Allow container to take more width in portrait */
+        padding: 1.5rem; /* Adjust padding for smaller screens */
+        margin: 0 auto; /* Center horizontally */
+      }
+
+      h2 {
+        font-size: 1.7rem; /* Make heading slightly larger */
+      }
+
+      .buttons {
+        flex-wrap: wrap; /* Allow buttons to wrap onto the next line */
+        justify-content: center; /* Center buttons when wrapped */
+        gap: 0.5rem; /* Add gap between buttons */
+      }
+
+      .buttons button {
+        flex: 1 1 auto; /* Allow buttons to grow and shrink, filling available space */
+        min-width: 100px; /* Ensure a minimum width for each button */
+        font-size: 1rem; /* Slightly larger font for buttons */
+        padding: 0.6rem;
+      }
+
+      input[type="time"],
+      button#berechnen {
+        font-size: 1.2rem; /* Even larger font for inputs/buttons */
+        padding: 0.85rem;
+      }
+
+      .result {
+        font-size: 1.1rem; /* Larger font for result */
+      }
+    }
+
+    /* Adjustments for very small screens */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
+        max-width: 95%; /* Even more width on very small screens */
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      .buttons button {
+        font-size: 0.95rem;
+        padding: 0.5rem;
+      }
+
+      input[type="time"],
+      button#berechnen {
+        font-size: 1rem;
+        padding: 0.75rem;
+      }
+
+      .result {
+        font-size: 1rem;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Arbeitszeitrechner</h2>
+
+    <div class="buttons">
+      <button onclick="setArbeitszeit(35, this)">35h</button>
+      <button onclick="setArbeitszeit(37, this)" class="active">37h</button>
+      <button onclick="setArbeitszeit(40, this)">40h</button>
+    </div>
+
+    <label for="startzeit">Beginn der Arbeit:</label>
+    <input type="time" id="startzeit">
+
+    <button id="berechnen" onclick="berechneAbweichung()">Berechnen</button>
+
+    <div class="result" id="ergebnis"></div>
+  </div>
+
+  <script>
+    let sollArbeitszeitProTag = 7.4; // Standard: 37h Woche
+
+    // Funktion zum Setzen der Sollarbeitszeit und des aktiven Buttons
+    function setArbeitszeit(stundenProWoche, button) {
+      // Alle Button-Styles zurücksetzen
+      document.querySelectorAll(".buttons button").forEach(btn => btn.classList.remove("active"));
+      // Aktiven Button hervorheben
+      button.classList.add("active");
+
+      // Sollarbeitszeit pro Tag je nach Wochenarbeitszeit setzen
+      if (stundenProWoche === 35) sollArbeitszeitProTag = 7.0;
+      else if (stundenProWoche === 37) sollArbeitszeitProTag = 7.4;
+      else if (stundenProWoche === 40) sollArbeitszeitProTag = 8.0;
+    }
+
+    // Funktion zur Berechnung der Abweichung
+    function berechneAbweichung() {
+      const startzeit = document.getElementById("startzeit").value;
+      const ergebnisEl = document.getElementById("ergebnis");
+
+      if (!startzeit) {
+        ergebnisEl.textContent = "Bitte gib die Startzeit ein.";
+        return;
+      }
+
+      const [stunden, minuten] = startzeit.split(":").map(Number);
+      const arbeitsbeginn = new Date();
+      arbeitsbeginn.setHours(stunden, minuten, 0, 0);
+
+      const pauseInMinuten = 45; // 45 Minuten Pause
+      const pauseInMillis = pauseInMinuten * 60 * 1000;
+
+      // Sollarbeitszeit in Millisekunden umrechnen
+      const sollArbeitszeitInMillis = sollArbeitszeitProTag * 60 * 60 * 1000;
+      
+      // Gesamtzeit = Sollarbeitszeit + Pause
+      const gesamtzeitInMillis = sollArbeitszeitInMillis + pauseInMillis;
+
+      const arbeitsendeSoll = new Date(arbeitsbeginn.getTime() + gesamtzeitInMillis);
+      const jetzt = new Date();
+
+      const abweichungMinuten = Math.round((jetzt - arbeitsendeSoll) / (1000 * 60));
+      const vorzeichen = abweichungMinuten >= 0 ? "+" : "-";
+      const absMinuten = Math.abs(abweichungMinuten);
+      const stundenAnz = Math.floor(absMinuten / 60);
+      const restMinuten = absMinuten % 60;
+
+      const endeStunden = arbeitsendeSoll.getHours().toString().padStart(2, '0');
+      const endeMinuten = arbeitsendeSoll.getMinutes().toString().padStart(2, '0');
+
+      ergebnisEl.innerHTML = `
+        <strong>Arbeitszeitende (inkl. Pause):</strong> ${endeStunden}:${endeMinuten} Uhr<br><br>
+        <strong>Abweichung:</strong> ${vorzeichen}${stundenAnz}h ${restMinuten}min
+      `;
+    }
+
+    // Funktion zum Vorausfüllen der aktuellen Zeit beim Laden der Seite
+    document.addEventListener("DOMContentLoaded", function() {
+      const startzeitInput = document.getElementById("startzeit");
+      const jetzt = new Date();
+      const aktuelleStunden = jetzt.getHours().toString().padStart(2, '0');
+      const aktuelleMinuten = jetzt.getMinutes().toString().padStart(2, '0');
+      startzeitInput.value = `${aktuelleStunden}:${aktuelleMinuten}`;
+    });
+  </script>
+</body>
+</html>
